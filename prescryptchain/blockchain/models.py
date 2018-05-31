@@ -162,11 +162,21 @@ class TransactionManager(models.Manager):
     def non_validated_txs(self):
         return self.get_queryset().non_validated_txs()
 
+    def create_transaction(self):
+        '''Create transaction initial'''
+        transaction_initial = Transaction.objects.create(
+            is_valid = True,
+            txid = genesis_hash_generator()
+            )
+        transaction_initial.hash_before = '0'
+        transaction_initial.save()
+        return transaction_initial
+
     def create_block_attempt(self): # This is where PoW happens
         ''' Use PoW hashcash algoritm to attempt to create a block '''
         _hashcash_tools = Hashcash(debug=True)
         if not cache.get('challenge') and not cache.get('counter') == 0:
-            challenge = _hashcash_tools.create_challenge(word_initial=settings.HC_WORD_INITIAL)
+            challenge = _hashcash_tools.create_challenge(word_initial="test")
             safe_set_cache('challenge', challenge)
             safe_set_cache('counter', 0)
 
@@ -184,40 +194,34 @@ class TransactionManager(models.Manager):
             counter = cache.get('counter') + 1
             safe_set_cache('counter', counter)
 
-
     def create_tx(self, data, **kwargs):
-
         tx = self.create_raw_tx(data)
-
-        # Is this necessary
-        # if "medications" in data and len(data["medications"]) != 0:
-        #     for med in data["medications"]:
-        #         Medication.objects.create_medication(prescription=rx, **med)
-
         return tx
 
     def create_raw_tx(self, data, **kwargs):
         # This calls the super method saving all clean data first
+        self.create_transaction()
         tx = Transaction()
         # Get Public Key from API
         raw_pub_key = data.get("public_key")
         pub_key = un_savify_key(raw_pub_key) # Make it usable
 
+        import code; code.interact(local=locals())
         # Extract signature
         _signature = data.pop("signature", None)
 
+        ##### hidden data?
         tx.sender = bin2hex(encrypt_with_public_key(data["medic_name"].encode("utf-8"), pub_key))
-        tx.receiver = bin2hex(encrypt_with_public_key(data["medic_cedula"].encode("utf-8"), pub_key))
-        
+        tx.receiver = bin2hex(encrypt_with_public_key(data["patient_name"].encode("utf-8"), pub_key))
         # This is basically the address
         tx.public_key = raw_pub_key
 
         tx.timestamp = data["timestamp"]
-        tx.create_raw_msg()
+        #tx.create_raw_msg()
 
         tx.hash()
         # Save signature
-        tx.signature = _signature
+        ###tx.signature = _signature
 
         # Transactional validation
         if verify_signature(json.dumps(sorted(data)), _signature, pub_key):
@@ -229,7 +233,7 @@ class TransactionManager(models.Manager):
         if self.last() is None:
             tx.previous_hash = "0"
         else:
-            tx.previous_hash = self.last().rxid
+            tx.previous_hash = self.last().txid
 
         tx.save()
 
@@ -246,12 +250,13 @@ class Transaction(models.Model):
     raw_msg = models.TextField(blank=True, default="") # Anything can be stored here
     # block information
     block = models.ForeignKey('blockchain.Block', related_name='block', null=True, blank=True)
+    #I am not sure how to get a signature here.
     signature = models.CharField(max_length=255, null=True, blank=True, default="")
     is_valid = models.BooleanField(default=True, blank=True)
     txid = models.CharField(max_length=255, blank=True, default="")
     previous_hash = models.CharField(max_length=255, default="")
     # Details
-    details = JSONField(default={}, blank=True) 
+    details = JSONField(default={}, blank=True)
 
     objects = TransactionManager()
 
@@ -259,7 +264,6 @@ class Transaction(models.Model):
     def hash(self):
         hash_object = hashlib.sha256(self.raw_msg)
         self.txid = hash_object.hexdigest()
-
 
     @property
     def get_pub_key_receiver(self):
@@ -269,11 +273,13 @@ class Transaction(models.Model):
 
     def create_raw_msg(self):
         # Create raw html and encode
-        msg = (
-            self.timestamp +
-            self.signature
-        )
+        msg = self.timestamp
+        # msg = (
+        #     self.timestamp +
+        #     self.signature
+        # )
         self.raw_msg = msg.encode('utf-8')
+        return self.raw_msg
 
     def get_formatted_date(self, format_time='d/m/Y'):
         # Correct date and format
@@ -323,6 +329,71 @@ class PrescriptionManager(models.Manager):
 
     def get_queryset(self):
         return PrescriptionQueryset(self.model, using=self._db)
+
+    def non_validated_rxs(self):
+        return self.get_queryset().non_validated_rxs()
+
+    # def create_transaction(self):
+    #         transaction = Transaction.objects.create_tx(data=data)
+
+    def create_rx(self, data, **kwargs):
+        rx = self.create_raw_rx(data)
+        # Is this necessary
+        if "medications" in data and len(data["medications"]) != 0:
+            for med in data["medications"]:
+                Medication.objects.create_medication(prescription=rx, **med)
+
+        return rx
+
+    def create_raw_rx(self, data, **kwargs):
+        # This calls the super method saving all clean data first
+        rx = Prescription()
+        # Get Public Key from API
+        raw_pub_key = data.get("public_key")
+        pub_key = un_savify_key(raw_pub_key) # Make it usable
+
+        # Extract signature
+        _signature = data.pop("signature", None)
+
+        rx.medic_name = bin2hex(encrypt_with_public_key(data["medic_name"].encode("utf-8"), pub_key))
+        rx.medic_cedula = bin2hex(encrypt_with_public_key(data["medic_cedula"].encode("utf-8"), pub_key))
+        rx.medic_hospital = bin2hex(encrypt_with_public_key(data["medic_hospital"].encode("utf-8"), pub_key))
+        rx.patient_name = bin2hex(encrypt_with_public_key(data["patient_name"].encode("utf-8"), pub_key))
+        rx.patient_age = bin2hex(encrypt_with_public_key(data["patient_age"].encode("utf-8"), pub_key))
+
+        if len(data["diagnosis"]) > 52:
+            data["diagnosis"] = data["diagnosis"][0:52]
+        rx.diagnosis = bin2hex(encrypt_with_public_key(data["diagnosis"].encode("utf-8"), pub_key))
+
+        # This is basically the address
+        rx.public_key = raw_pub_key
+
+        if "location" in data:
+            rx.location = data["location"]
+
+        rx.timestamp = data["timestamp"]
+        rx.create_raw_msg()
+
+        rx.hash()
+        # Save signature
+        rx.signature = _signature
+
+        # Transactional validation
+        if verify_signature(json.dumps(sorted(data)), _signature, pub_key):
+            rx.is_valid = True
+        else:
+            rx.is_valid = False
+
+        # Save previous hash
+        if self.last() is None:
+            rx.previous_hash = "0"
+        else:
+            rx.previous_hash = self.last().rxid
+
+        rx.save()
+
+
+        return rx
 
 
 # Simplified Rx Model

@@ -164,7 +164,7 @@ class TransactionManager(models.Manager):
 
     def create_block_attempt(self): # This is where PoW happens
         ''' Use PoW hashcash algoritm to attempt to create a block '''
-        _hashcash_tools = Hashcash(debug=True)
+        _hashcash_tools = Hashcash(debug=settings.DEBUG)
         if not cache.get('challenge') and not cache.get('counter') == 0:
             challenge = _hashcash_tools.create_challenge(word_initial=settings.HC_WORD_INITIAL)
             safe_set_cache('challenge', challenge)
@@ -189,10 +189,10 @@ class TransactionManager(models.Manager):
 
         tx = self.create_raw_tx(data)
 
-        # Is this necessary
-        # if "medications" in data and len(data["medications"]) != 0:
-        #     for med in data["medications"]:
-        #         Medication.objects.create_medication(prescription=rx, **med)
+        # This is necessary until medications will be json instead of a model
+        if "medications" in data and len(data["medications"]) != 0:
+            for med in data["medications"]:
+                Medication.objects.create_medication(prescription=tx.rx, **med)
 
         return tx
 
@@ -200,7 +200,7 @@ class TransactionManager(models.Manager):
         # This calls the super method saving all clean data first
         tx = Transaction()
         # Get Public Key from API
-        raw_pub_key = data.get("public_key")
+        raw_pub_key = data.get("public_key", "")
         pub_key = un_savify_key(raw_pub_key) # Make it usable
 
         # Extract signature
@@ -323,6 +323,7 @@ class PrescriptionManager(models.Manager):
 
     def get_queryset(self):
         return PrescriptionQueryset(self.model, using=self._db)
+
 
 
 # Simplified Rx Model

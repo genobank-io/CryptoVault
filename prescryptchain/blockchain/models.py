@@ -202,6 +202,11 @@ class TransactionManager(models.Manager):
             _signature=_signature,
             pub_key=pub_key
         )
+        
+        # Assing rx to TX
+        tx.rx = rx
+        tx.save()
+
         # This is necessary until medications will be json instead of a model
         if "medications" in data and len(data["medications"]) != 0:
             for med in data["medications"]:
@@ -343,7 +348,6 @@ class PrescriptionManager(models.Manager):
     def get_queryset(self):
         return PrescriptionQueryset(self.model, using=self._db)
 
-
     def create_rx(self, data, **kwargs):
         ''' Custom Create Rx manager '''
 
@@ -353,14 +357,33 @@ class PrescriptionManager(models.Manager):
             medic_cedula=data.get("medic_cedula", ""),
             medic_hospital=data.get("medic_cedula", ""),
             patient_name=data.get("patient_name", ""),
-            patient_age=data.get("patient_age", "")
+            patient_age=data.get("patient_age", ""),
+            diagnosis=data.get("diagnosis", "")
+            timestamp=data.get("timestamp", None),
+            public_key=kwargs.get("raw_pub_key", ""),
+            signature=kwargs.get("_signature", "")
         )
+        if "location" in data:
+            rx.location = data["location"]
+
+        if verify_signature(json.dumps(sorted(data)), rx._signature, kwargs.get(pub_key, None)):
+            rx.is_valid = True
+        else:
+            rx.is_valid = False
+
+        # Save previous hash
+        if self.last() is None:
+            rx.previous_hash = "0"
+        else:
+            rx.previous_hash = self.last().rxid
+
+        # Generate raw msg, create hash and save it
+        rx.create_raw_msg()
+        rx.hash()
+        rx.save()
 
         ''' Return RX object'''
         return rx
-
-
-
 
 
 # Simplified Rx Model

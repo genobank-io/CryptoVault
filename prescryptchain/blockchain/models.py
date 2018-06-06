@@ -200,7 +200,9 @@ class TransactionManager(models.Manager):
         rx = Prescription.objects.create_rx(
             data,
             _signature=_signature,
-            pub_key=pub_key
+            pub_key=pub_key,
+            raw_pub_key=raw_pub_key,
+            transaction=tx
         )
 
         # Assing rx to TX
@@ -226,7 +228,7 @@ class TransactionManager(models.Manager):
         # This calls the super method saving all clean data first
         tx = Transaction()
         # Get Public Key from API
-        pub_key = kwargs.get(pub_key) # Make it usable
+        pub_key = kwargs.get("pub_key", None) # Make it usable
         _signature = kwargs.get("_signature", None)
 
         # Save signature and timestamp
@@ -249,7 +251,7 @@ class TransactionManager(models.Manager):
         if self.last() is None:
             tx.previous_hash = "0"
         else:
-            tx.previous_hash = self.last().rxid
+            tx.previous_hash = self.last().txid
 
         # Create raw data to generate hash and save it
         tx.create_raw_msg()
@@ -362,11 +364,12 @@ class PrescriptionManager(models.Manager):
             timestamp=data.get("timestamp", None),
             public_key=kwargs.get("raw_pub_key", ""),
             signature=kwargs.get("_signature", ""),
+            transaction=kwargs.get("transaction", None)
         )
         if "location" in data:
             rx.location = data["location"]
 
-        if verify_signature(json.dumps(sorted(data)), rx._signature, kwargs.get(pub_key, None)):
+        if verify_signature(json.dumps(sorted(data)), rx.signature, kwargs.get("pub_key", None)):
             rx.is_valid = True
         else:
             rx.is_valid = False
@@ -390,7 +393,7 @@ class PrescriptionManager(models.Manager):
 @python_2_unicode_compatible
 class Prescription(models.Model):
     # MAIN
-    transaction = models.ForeignKey('blockchain.Transaction', related_name='transaction', null=True, blank=True)
+    transaction = models.ForeignKey('blockchain.Transaction', related_name='prescriptions', null=True, blank=True)
     readable = models.BooleanField(default=False, blank=True) # Filter against this when
     # Cryptographically enabled fields
     public_key = models.CharField(max_length=3000, blank=True, default="")

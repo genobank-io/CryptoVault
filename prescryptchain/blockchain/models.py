@@ -202,7 +202,7 @@ class TransactionManager(models.Manager):
             _signature=_signature,
             pub_key=pub_key
         )
-        
+
         # Assing rx to TX
         tx.rx = rx
         tx.save()
@@ -358,10 +358,10 @@ class PrescriptionManager(models.Manager):
             medic_hospital=data.get("medic_cedula", ""),
             patient_name=data.get("patient_name", ""),
             patient_age=data.get("patient_age", ""),
-            diagnosis=data.get("diagnosis", "")
+            diagnosis=data.get("diagnosis", ""),
             timestamp=data.get("timestamp", None),
             public_key=kwargs.get("raw_pub_key", ""),
-            signature=kwargs.get("_signature", "")
+            signature=kwargs.get("_signature", ""),
         )
         if "location" in data:
             rx.location = data["location"]

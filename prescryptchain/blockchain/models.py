@@ -186,38 +186,53 @@ class TransactionManager(models.Manager):
 
 
     def create_tx(self, data, **kwargs):
+        ''' Custom method for create Tx with rx item '''
 
-        tx = self.create_raw_tx(data)
-
-        # This is necessary until medications will be json instead of a model
-        if "medications" in data and len(data["medications"]) != 0:
-            for med in data["medications"]:
-                Medication.objects.create_medication(prescription=tx.rx, **med)
-
-        return tx
-
-    def create_raw_tx(self, data, **kwargs):
-        # This calls the super method saving all clean data first
-        tx = Transaction()
-        # Get Public Key from API
+        ''' Get initial data '''
+        _signature = data.pop("signature", None)
         raw_pub_key = data.get("public_key", "")
         pub_key = un_savify_key(raw_pub_key) # Make it usable
 
-        # Extract signature
-        _signature = data.pop("signature", None)
+        ''' FIRST Create the Transaction '''
+        tx = self.create_raw_tx(data, _signature=_signature, pub_key=pub_key)
 
-        tx.sender = bin2hex(encrypt_with_public_key(data["medic_name"].encode("utf-8"), pub_key))
-        tx.receiver = bin2hex(encrypt_with_public_key(data["medic_cedula"].encode("utf-8"), pub_key))
+        ''' THEN Create the Data Item(prescription) '''
+        rx = Prescription.objects.create_rx(
+            data,
+            _signature=_signature,
+            pub_key=pub_key
+        )
+        # This is necessary until medications will be json instead of a model
+        if "medications" in data and len(data["medications"]) != 0:
+            for med in data["medications"]:
+                Medication.objects.create_medication(prescription=rx, **med)
+
+        ''' LAST do create block attempt '''
+        self.create_block_attempt()
+
         
-        # This is basically the address
-        tx.public_key = raw_pub_key
+        # Return the transaction object
+        return tx
 
-        tx.timestamp = data["timestamp"]
-        tx.create_raw_msg()
+    def create_raw_tx(self, data, **kwargs):
+        ''' This method just create the transaction instance '''
 
-        tx.hash()
-        # Save signature
+        ''' START TX creation '''
+        # This calls the super method saving all clean data first
+        tx = Transaction()
+        # Get Public Key from API
+        pub_key = kwargs.get(pub_key) # Make it usable
+        _signature = kwargs.get("_signature", None)
+
+        # Save signature and timestamp
         tx.signature = _signature
+        tx.timestamp = timezone.now()
+
+        # Check later ======>>
+        # tx.sender = bin2hex(encrypt_with_public_key(data["medic_name"].encode("utf-8"), pub_key))
+        # tx.receiver = bin2hex(encrypt_with_public_key(data["medic_cedula"].encode("utf-8"), pub_key))
+        # This is basically the address
+        # tx.public_key = raw_pub_key
 
         # Transactional validation
         if verify_signature(json.dumps(sorted(data)), _signature, pub_key):
@@ -225,16 +240,18 @@ class TransactionManager(models.Manager):
         else:
             tx.is_valid = False
 
-        # Save previous hash
+        # Set previous hash
         if self.last() is None:
             tx.previous_hash = "0"
         else:
             tx.previous_hash = self.last().rxid
 
+        # Create raw data to generate hash and save it
+        tx.create_raw_msg()
+        tx.hash()
         tx.save()
 
-        self.create_block_attempt()
-
+        ''' RETURN TX '''
         return tx
 
 # Simplified Tx Model
@@ -245,11 +262,11 @@ class Transaction(models.Model):
     timestamp = models.DateTimeField(default=timezone.now, db_index=True)
     raw_msg = models.TextField(blank=True, default="") # Anything can be stored here
     # block information
-    block = models.ForeignKey('blockchain.Block', related_name='block', null=True, blank=True)
-    signature = models.CharField(max_length=255, null=True, blank=True, default="")
-    is_valid = models.BooleanField(default=True, blank=True)
-    txid = models.CharField(max_length=255, blank=True, default="")
-    previous_hash = models.CharField(max_length=255, default="")
+    block = models.ForeignKey('blockchain.Block', related_name='transactions', null=True, blank=True)
+    signature = models.TextField(blank=True, default="")
+    is_valid = models.BooleanField(default=False, blank=True)
+    txid = models.TextField(blank=True, default="")
+    previous_hash = models.TextField(blank=True, default="")
     # Details
     details = JSONField(default={}, blank=True) 
 
@@ -270,8 +287,10 @@ class Transaction(models.Model):
     def create_raw_msg(self):
         # Create raw html and encode
         msg = (
-            self.timestamp +
-            self.signature
+            self.timestamp.isoformat() +
+            self.signature +
+            str(self.is_valid) +
+            self.previous_hash
         )
         self.raw_msg = msg.encode('utf-8')
 
@@ -323,6 +342,24 @@ class PrescriptionManager(models.Manager):
 
     def get_queryset(self):
         return PrescriptionQueryset(self.model, using=self._db)
+
+
+    def create_rx(self, data, **kwargs):
+        ''' Custom Create Rx manager '''
+
+        ''' START RX creation '''
+        rx = Prescription(
+            medic_name=data.get("medic_name", ""),
+            medic_cedula=data.get("medic_cedula", ""),
+            medic_hospital=data.get("medic_cedula", ""),
+            patient_name=data.get("patient_name", ""),
+            patient_age=data.get("patient_age", "")
+        )
+
+        ''' Return RX object'''
+        return rx
+
+
 
 
 

@@ -217,7 +217,7 @@ class TransactionManager(models.Manager):
         ''' LAST do create block attempt '''
         self.create_block_attempt()
 
-        
+
         # Return the transaction object
         return tx
 
@@ -275,7 +275,7 @@ class Transaction(models.Model):
     txid = models.TextField(blank=True, default="")
     previous_hash = models.TextField(blank=True, default="")
     # Details
-    details = JSONField(default={}, blank=True) 
+    details = JSONField(default={}, blank=True)
 
     objects = TransactionManager()
 
@@ -396,35 +396,35 @@ class Prescription(models.Model):
     transaction = models.ForeignKey('blockchain.Transaction', related_name='prescriptions', null=True, blank=True)
     readable = models.BooleanField(default=False, blank=True) # Filter against this when
     # Cryptographically enabled fields
-    public_key = models.CharField(max_length=3000, blank=True, default="")
+    public_key = models.TextField(blank=True, default="")
     ### Encrypted data payload
     ## Patient and Medic data (encrypted data payload)
     # Note to self, I think that this could be a JSON field with a non fixed structure
-    medic_name = models.CharField(blank=True, max_length=255, default="")
-    medic_cedula = models.CharField(blank=True, max_length=255, default="")
-    medic_hospital = models.CharField(blank=True, max_length=255, default="")
-    patient_name = models.CharField(blank=True, max_length=255, default="")
-    patient_age = models.CharField(blank=True, max_length=255, default="")
+    medic_name = models.TextField(blank=True, default="")
+    medic_cedula = models.TextField(blank=True, default="")
+    medic_hospital = models.TextField(blank=True, default="")
+    patient_name = models.TextField(blank=True, default="")
+    patient_age = models.TextField(blank=True, default="")
     diagnosis = models.TextField(default="")
     encrypted_data = JSONField(default={}, blank=True)
     ## Non encrypted data payload
     ## Public fields (non encrypted data payload)
     # Misc
     timestamp = models.DateTimeField(default=timezone.now, db_index=True)
-    location = models.CharField(blank=True, max_length=255, default="")
+    location = models.TextField(blank=True, default="")
     raw_msg = models.TextField(blank=True, default="") # Anything can be stored here
     location_lat = models.FloatField(null=True, blank=True, default=0) # For coordinates
     location_lon = models.FloatField(null=True, blank=True, default=0)
     public_data = JSONField(default={}, blank=True)
     # Rx Specific
-    details = models.TextField(blank=True, max_length=10000, default="")
-    extras = models.TextField(blank=True, max_length=10000, default="")
+    details = models.TextField(blank=True, default="")
+    extras = models.TextField(blank=True, default="")
     bought = models.BooleanField(default=False)
     # Transactional validation
-    signature = models.CharField(max_length=255, null=True, blank=True, default="")
+    signature = models.TextField(null=True, blank=True, default="")
     is_valid = models.BooleanField(default=True, blank=True)
-    rxid = models.CharField(max_length=255, blank=True, default="")
-    previous_hash = models.CharField(max_length=255, default="") # this should not exist
+    rxid = models.TextField(blank=True, default="")
+    previous_hash = models.TextField(default="") # this should not exist
 
     # Business logic
     objects = PrescriptionManager()

@@ -3,44 +3,6 @@
 {% load staticfiles %}
 {# Block HOME #}
 {% block content %}
-<!-- STATISTICS SECTION-->
-<section id="stat_section">
-  <div class="container">
-    <div class="row centeredrow">
-      <!-- First block-->
-      <div class="whiteblock col-xs-12 col-sm-4">
-        <div class="row">
-          <div class="col-md-3"><img src="{% static 'media/icon-block1.png' %}" alt=""></div>
-          <div class="col-md-9">
-            <p id="hashrate">39,122,596.14 TH/s</p>
-            <p>Hash Rate</p>
-          </div>
-        </div>
-      </div>
-      <!-- Second Block-->
-      <div class="whiteblock col-xs-12 col-sm-4">
-        <div class="row">
-          <div class="col-md-3"><img src="{% static 'media/icon-block2.png' %}" alt=""></div>
-          <div class="col-md-9">
-            <p id="transperday">270 790</p>
-            <p>Transaction per day</p>
-          </div>
-        </div>
-      </div>
-      <!-- Third Block-->
-      <div class="whiteblock col-xs-12 col-sm-4">
-        <div class="row">
-          <div class="col-md-3"><img src="{% static 'media/icon-block3.png' %}" alt=""></div>
-          <div class="col-md-9">
-            <p id="marketcap">$115,226,784,775.00</p>
-            <p>Market Cap</p>
-          </div>
-        </div>
-      </div>
-    </div> <!--Closing main row-->
-  </div> <!-- Closing container-->
-</section>
-<!-- Closing Statistic Section-->
 
 <!-- Graphics section-->
 <section id="stat_section">
@@ -54,13 +16,13 @@
               <SCRIPT LANGUAGE="Javascript">
                 <!--
                 // Array of day names
-                var dayNames = new Array("Sunday","Monday","Tuesday","Wednesday",
-                        "Thursday","Friday","Saturday");
+                var dayNames = new Array("Domingo","Lunes","Martes","Miercoles",
+                        "Jueves","Viernes","Sábado");
 
                 // Array of month Names
                 var monthNames = new Array(
-                "January","February","March","April","May","June","July",
-                "August","September","October","November","December");
+                "Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio",
+                "Agosto","Septiembre","Octubre","Noviembre","Diciembre");
 
                 var now = new Date();
                 document.write(dayNames[now.getDay()] + ", " +
@@ -74,12 +36,12 @@
         </div>
         <div class="row">
           <div class="shadowbl col-md-12" style="height:150px">
-            <h2>Search</h2>
+            <h2>Busqueda</h2>
             <form method="GET" action="/hash" class="navbar-form navbar-left" role="search">
               <div class="form-group">
                 <input type="text" class="form-control" name="hash_rx" placeholder="Tx Hash" required>
               </div>
-              <button type="submit" id="search-block" class="btn btn-default">Search</button>
+              <button type="submit" id="search-block" class="btn btn-default">Buscar</button>
             </form>
           </div>
         </div>
@@ -97,20 +59,20 @@
   <div class="container mainblock">
     <div class="row">
       <div class="col-xs-12">
-        <h3>RECENT BLOCKS</h3>
+        <h3>BLOCKS RECIENTES</h3>
         {# last 5 blocks #}
         <table id="crypto-table" class="table table-striped">
           <tr>
-            <td>Size</td>
+            <td>Tamaño</td>
             <td>Hash</td>
-            <td class="text-center">When</td>
+            <td class="text-center">Cuándo</td>
           </tr>
           {% for rx_block in rx_blocks %}
             <tr>
               <td><a class="a_purple" href="/block/{{ rx_block.hash_block }}/"> {{ rx_block.raw_size }} bytes</a></td>
               <td class="text-center hidden-xs"><a class="a_grey" href="/block/{{ rx_block.hash_block }}/">{{ rx_block.hash_block }}</a></td>
               <td class="text-center visible-xs-block hash_block-mobile"><a class="a_grey" href="/block/{{ rx_block.hash_block }}/">{{ rx_block.hash_block }}</a></td>
-              <td class="text-center"><a class="a_green" href="/block/{{ rx_block.hash_block }}/"><span>{{ rx_block.timestamp|timezone:"UTC"|timesince }}</span></a></td>
+              <td class="text-center"><a class="a_green" href="/block/{{ rx_block.hash_block }}/"><span>{{ rx_block.timestamp|timezone:"America/Mexico_City"|timesince }}</span></a></td>
             </tr>
           {% endfor %}
         </table>
@@ -119,20 +81,20 @@
 
     <div class="row">
       <div class="col-xs-12">
-        <h3>RECENT TXS</h3>
+        <h3>PRESCRIPCIONES RECIENTES</h3>
         {# last 5 rx #}
         <table id="crypto-table" class="table table-striped">
           <tr>
-            <td>Size</td>
+            <td>Tamaño</td>
             <td>Hash</td>
-            <td class="text-center">When</td>
+            <td class="text-center">Cuándo</td>
             </tr>
           {% for rx in prescriptions %}
           <tr>
             <td><a class="a_purple" href="/hash/{{ rx.rxid }}/"> {{ rx.raw_size }} bytes</a></td>
             <td class="text-center hidden-xs"><a class="a_grey" href="/hash/{{ rx.rxid }}/">{{ rx.rxid }}</a></td>
             <td class="text-center visible-xs-block signature-mobile"><a class="a_grey" href="/hash/{{ rx.rxid }}/">{{ rx.rxid }}</a></td>
-            <td class="text-center"><a class="a_green" href="/hash/{{ rx.rxid }}/"><span>{{ rx.get_delta_datetime|timezone:"UTC"|timesince }}</span></a></td>
+            <td class="text-center"><a class="a_green" href="/hash/{{ rx.rxid }}/"><span>{{ rx.get_delta_datetime|timezone:"America/Mexico_City"|timesince }}</span></a></td>
           </tr>
           {% endfor %}
         </table>
@@ -204,51 +166,51 @@
           ],
           "dataProvider": [
             {
-              "category": "Ago '17",
+              "category": "Ago.",
               "column-1": "6.3"
             },
             {
-              "category": "Sep '17",
+              "category": "Sep.",
               "column-1": "6.1"
             },
             {
-              "category": "Oct '17",
+              "category": "Oct.",
               "column-1": "8.1"
             },
             {
-              "category": "Nov '17",
+              "category": "Nov.",
               "column-1": "9.9"
             },
             {
-              "category": "Dic '17",
+              "category": "Dic.",
               "column-1": "11"
             },
             {
-              "category": "Jan '18",
+              "category": "Ene.",
               "column-1": "14"
             },
             {
-              "category": "Feb '18",
+              "category": "Feb.",
               "column-1": "20"
             },
             {
-              "category": "Mar '18",
+              "category": "Mar.",
               "column-1": "23"
             },
             {
-              "category": "Abr '18",
+              "category": "Abr.",
               "column-1": "25"
             },
             {
-              "category": "May '18",
+              "category": "May.",
               "column-1": "28"
             },
             {
-              "category": "Jun '18",
+              "category": "Jun.",
               "column-1": "35"
             },
             {
-              "category": "Jul '18",
+              "category": "Jul.",
               "column-1": "38"
             }
           ]

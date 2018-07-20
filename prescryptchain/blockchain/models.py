@@ -1,6 +1,5 @@
 # -*- encoding: utf-8 -*-
 # Python Libs
-## Hash lib
 import hashlib
 import base64
 import merkletools
@@ -32,7 +31,6 @@ from .utils import (
 )
 from .helpers import genesis_hash_generator, GENESIS_INIT_DATA, get_genesis_merkle_root
 from api.exceptions import EmptyMedication, FailedVerifiedSignature
-
 
 # Setting block size
 BLOCK_SIZE = settings.BLOCK_SIZE

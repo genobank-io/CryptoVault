@@ -1,6 +1,5 @@
 # -*- encoding: utf-8 -*-
 # Python Libs
-## Hash lib
 import hashlib
 import base64
 import merkletools
@@ -32,7 +31,6 @@ from .utils import (
 )
 from .helpers import genesis_hash_generator, GENESIS_INIT_DATA, get_genesis_merkle_root
 from api.exceptions import EmptyMedication, FailedVerifiedSignature
-
 
 # Setting block size
 BLOCK_SIZE = settings.BLOCK_SIZE
@@ -149,8 +147,8 @@ class Block(models.Model):
 class TransactionQueryset(models.QuerySet):
     ''' Add custom querysets'''
 
-    def non_validated_txs(self):
-        return self.filter(is_valid=True).filter(block=None)
+    def has_not_block(self):
+        return self.filter(block=None)
 
 
 class TransactionManager(models.Manager):
@@ -159,8 +157,8 @@ class TransactionManager(models.Manager):
     def get_queryset(self):
         return TransactionQueryset(self.model, using=self._db)
 
-    def non_validated_txs(self):
-        return self.get_queryset().non_validated_txs()
+    def has_not_block(self):
+        return self.get_queryset().has_not_block()
 
     def create_block_attempt(self): # This is where PoW happens
         ''' Use PoW hashcash algoritm to attempt to create a block '''
@@ -173,7 +171,7 @@ class TransactionManager(models.Manager):
         is_valid_hashcash, hashcash_string = _hashcash_tools.calculate_sha(cache.get('challenge'), cache.get('counter'))
 
         if is_valid_hashcash:
-            block = Block.objects.create_block(self.non_validated_txs()) # TODO add on creation hash and merkle
+            block = Block.objects.create_block(self.has_not_block()) # TODO add on creation hash and merkle
             block.hashcash = hashcash_string
             block.nonce = cache.get('counter')
             block.save()
@@ -279,6 +277,7 @@ class Transaction(models.Model):
 
     objects = TransactionManager()
 
+
     # Hashes msg_html with utf-8 encoding, saves this in and hash in _signature
     def hash(self):
         hash_object = hashlib.sha256(self.raw_msg)
@@ -340,9 +339,11 @@ class Transaction(models.Model):
 # =============================PRESCRIPTION============================
 # =====================================================================
 class PrescriptionQueryset(models.QuerySet):
-    ''' Add custom querysets '''
-    def non_validated_rxs(self):
-        return self.filter(is_valid=True).filter(block=None)
+    ''' Add custom querysets'''
+
+    def has_not_block(self):
+        return self.filter(block=None)
+
 
 class PrescriptionManager(models.Manager):
     ''' Manager for prescriptions '''
@@ -350,26 +351,54 @@ class PrescriptionManager(models.Manager):
     def get_queryset(self):
         return PrescriptionQueryset(self.model, using=self._db)
 
+    def has_not_block(self):
+        return self.get_queryset().has_not_block()
+
     def create_rx(self, data, **kwargs):
         ''' Custom Create Rx manager '''
 
-        ''' START RX creation '''
-        rx = Prescription(
-            medic_name=data.get("medic_name", ""),
-            medic_cedula=data.get("medic_cedula", ""),
-            medic_hospital=data.get("medic_cedula", ""),
-            patient_name=data.get("patient_name", ""),
-            patient_age=data.get("patient_age", ""),
-            diagnosis=data.get("diagnosis", ""),
-            timestamp=data.get("timestamp", None),
-            public_key=kwargs.get("raw_pub_key", ""),
-            signature=kwargs.get("_signature", ""),
-            transaction=kwargs.get("transaction", None)
-        )
+        '''
+            MUST CLEAN CODE 
+        '''
+
+        # This calls the super method saving all clean data first
+        rx = Prescription()
+        # Get Public Key from API
+        raw_pub_key = data.get("public_key")
+
+        try:
+            pub_key = pubkey_string_to_rsa(raw_pub_key) # Make it usable
+        except Exception as e:
+            # Attempt to create public key with base64
+            pub_key, raw_pub_key = pubkey_base64_to_rsa(raw_pub_key)
+
+        hex_raw_pub_key = savify_key(pub_key)
+
+        # Extract signature
+        _signature = data.pop("signature", None)
+
+        # This is basically the address
+        rx.public_key = hex_raw_pub_key
+
+        if "data" in data:
+            rx.data = data["data"]
+
         if "location" in data:
             rx.location = data["location"]
 
-        if verify_signature(json.dumps(sorted(data)), rx.signature, kwargs.get("pub_key", None)):
+        rx.timestamp = data["timestamp"]
+
+        # Save signature
+        rx.signature = _signature
+
+        ''' 
+            END CLEAN CODE 
+        '''
+
+        # Clean data to verify signature
+        _msg = json.dumps(rx.data, separators=(',',':'))
+
+        if verify_signature(_msg, _signature, pub_key):
             rx.is_valid = True
         else:
             rx.is_valid = False

@@ -27,7 +27,7 @@ from .utils import (
     un_savify_key, savify_key,
     encrypt_with_public_key, decrypt_with_private_key,
     calculate_hash, bin2hex, hex2bin,  get_new_asym_keys, get_merkle_root,
-    verify_signature, PoE
+    verify_signature, PoE, pubkey_string_to_rsa, pubkey_base64_to_rsa
 )
 from .helpers import genesis_hash_generator, GENESIS_INIT_DATA, get_genesis_merkle_root
 from api.exceptions import EmptyMedication, FailedVerifiedSignature
@@ -188,8 +188,16 @@ class TransactionManager(models.Manager):
 
         ''' Get initial data '''
         _signature = data.pop("signature", None)
-        raw_pub_key = data.get("public_key", "")
-        pub_key = un_savify_key(raw_pub_key) # Make it usable
+        # Get Public Key from API
+        raw_pub_key = data.get("public_key")
+
+        try:
+            pub_key = pubkey_string_to_rsa(raw_pub_key) # Make it usable
+        except Exception as e:
+            # Attempt to create public key with base64
+            pub_key, raw_pub_key = pubkey_base64_to_rsa(raw_pub_key)
+
+        hex_raw_pub_key = savify_key(pub_key)
 
         ''' FIRST Create the Transaction '''
         tx = self.create_raw_tx(data, _signature=_signature, pub_key=pub_key)
@@ -198,26 +206,15 @@ class TransactionManager(models.Manager):
         rx = Prescription.objects.create_rx(
             data,
             _signature=_signature,
-            pub_key=pub_key,
-            raw_pub_key=raw_pub_key,
+            pub_key=hex_raw_pub_key, # This is basically the address
             transaction=tx
         )
-
-        # Assing rx to TX
-        tx.rx = rx
-        tx.save()
-
-        # This is necessary until medications will be json instead of a model
-        if "medications" in data and len(data["medications"]) != 0:
-            for med in data["medications"]:
-                Medication.objects.create_medication(prescription=rx, **med)
 
         ''' LAST do create block attempt '''
         self.create_block_attempt()
 
-
         # Return the transaction object
-        return tx
+        return rx
 
     def create_raw_tx(self, data, **kwargs):
         ''' This method just create the transaction instance '''
@@ -239,8 +236,10 @@ class TransactionManager(models.Manager):
         # This is basically the address
         # tx.public_key = raw_pub_key
 
-        # Transactional validation
-        if verify_signature(json.dumps(sorted(data)), _signature, pub_key):
+        # Clean data to verify signature
+        _msg = json.dumps(data['data'], separators=(',',':'))
+
+        if verify_signature(_msg, _signature, pub_key):
             tx.is_valid = True
         else:
             tx.is_valid = False
@@ -357,51 +356,19 @@ class PrescriptionManager(models.Manager):
     def create_rx(self, data, **kwargs):
         ''' Custom Create Rx manager '''
 
-        '''
-            MUST CLEAN CODE 
-        '''
-
         # This calls the super method saving all clean data first
-        rx = Prescription()
-        # Get Public Key from API
-        raw_pub_key = data.get("public_key")
-
-        try:
-            pub_key = pubkey_string_to_rsa(raw_pub_key) # Make it usable
-        except Exception as e:
-            # Attempt to create public key with base64
-            pub_key, raw_pub_key = pubkey_base64_to_rsa(raw_pub_key)
-
-        hex_raw_pub_key = savify_key(pub_key)
-
-        # Extract signature
-        _signature = data.pop("signature", None)
-
-        # This is basically the address
-        rx.public_key = hex_raw_pub_key
+        rx = Prescription(
+            timestamp=data.get("timestamp", None),
+            public_key=kwargs.get("pub_key", ""),
+            signature=kwargs.get("_signature", ""),
+            transaction=kwargs.get("transaction", None)
+        )
 
         if "data" in data:
             rx.data = data["data"]
 
         if "location" in data:
             rx.location = data["location"]
-
-        rx.timestamp = data["timestamp"]
-
-        # Save signature
-        rx.signature = _signature
-
-        ''' 
-            END CLEAN CODE 
-        '''
-
-        # Clean data to verify signature
-        _msg = json.dumps(rx.data, separators=(',',':'))
-
-        if verify_signature(_msg, _signature, pub_key):
-            rx.is_valid = True
-        else:
-            rx.is_valid = False
 
         # Save previous hash
         if self.last() is None:
@@ -444,7 +411,7 @@ class Prescription(models.Model):
     raw_msg = models.TextField(blank=True, default="") # Anything can be stored here
     location_lat = models.FloatField(null=True, blank=True, default=0) # For coordinates
     location_lon = models.FloatField(null=True, blank=True, default=0)
-    public_data = JSONField(default={}, blank=True)
+    data = JSONField(default={}, blank=True)
     # Rx Specific
     details = models.TextField(blank=True, default="")
     extras = models.TextField(blank=True, default="")

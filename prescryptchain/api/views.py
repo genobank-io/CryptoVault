@@ -31,25 +31,15 @@ class MedicationNestedSerializer(serializers.ModelSerializer):
 
 class PrescriptionSerializer(serializers.ModelSerializer):
     """ Prescription serializer """
-    medications = MedicationNestedSerializer(
-        many=True, required=False,
-        help_text = "Medication Nested Serializer"
-    )
     timestamp = serializers.DateTimeField(read_only=False)
+    data = serializers.JSONField(binary=False, read_only=False)
 
     class Meta:
         model = Prescription
         fields = (
             'id',
             'public_key',
-            'medic_name',
-            'medic_cedula',
-            'medic_hospital',
-            'patient_name',
-            'patient_age',
-            'diagnosis',
-            'medications',
-            'location',
+            'data',
             'timestamp',
             'signature',
             'previous_hash',
@@ -59,11 +49,10 @@ class PrescriptionSerializer(serializers.ModelSerializer):
             'transaction',
             'readable',
         )
-        read_only_fields = ('id', 'rxid', 'previous_hash', 'is_valid',' transaction')
+        read_only_fields = ('id', 'rxid', 'previous_hash', 'is_valid',' transaction',)
 
     def create(self, validated_data):
-        tx = Transaction.objects.create_tx(data=validated_data)
-        return tx.rx
+        return Transaction.objects.create_tx(data=validated_data)
 
 
 class PrescriptionViewSet(viewsets.ModelViewSet):

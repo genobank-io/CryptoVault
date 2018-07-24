@@ -33,7 +33,6 @@ from .helpers import genesis_hash_generator, GENESIS_INIT_DATA, get_genesis_merk
 from api.exceptions import EmptyMedication, FailedVerifiedSignature
 
 # Setting block size
-BLOCK_SIZE = settings.BLOCK_SIZE
 logger = logging.getLogger('django_info')
 
 # =====================================================================

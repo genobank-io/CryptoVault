@@ -453,14 +453,7 @@ class Prescription(models.Model):
 
     def create_raw_msg(self):
         # Create raw html and encode
-        msg = (
-            self.medic_name +
-            self.medic_cedula +
-            self.medic_hospital +
-            self.patient_name +
-            self.patient_age +
-            self.diagnosis
-        )
+        msg = ( json.dumps(self.data) + timezone.now().isoformat() +  self.previous_hash )
         self.raw_msg = msg.encode('utf-8')
 
 

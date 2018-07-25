@@ -143,6 +143,15 @@
 {% endblock content %}
 
 {% block jsblock %}
+<script>
+  var TRANSFERRED = "39,122";
+  var TRANSDAY = "270";
+  var TRANSMONTH = "8123";
+
+  document.getElementById("#dtransferred").innerHTML = TRANSFERRED;
+  document.getElementById("#transday").innerHTML = TRANSDAY;
+  document.getElementById("#transmonth").innerHTML = TRANSMONTH;
+</script>
     <!-- amCharts javascript sources -->
     <script type="text/javascript" src="https://www.amcharts.com/lib/3/amcharts.js"></script>
     <script type="text/javascript" src="https://www.amcharts.com/lib/3/serial.js"></script>

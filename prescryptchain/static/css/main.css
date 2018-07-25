@@ -141,15 +141,15 @@ a.greybutton:hover{
   margin-top: 14px;
   margin-bottom: 20px;
 }
-#hashrate{
+#dtransferred{
   color:#FF6565;
   font-size: 20px;
 }
-#transperday{
+#transday{
   color:#A3A0FB;
   font-size: 20px;
 }
-#marketcap{
+#transmonth{
   color:#4AD991;
   font-size: 20px;
 }

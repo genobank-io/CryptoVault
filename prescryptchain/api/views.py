@@ -51,6 +51,7 @@ class PrescriptionViewSet(viewsets.ModelViewSet):
     # authentication_classes = (TokenAuthentication, BasicAuthentication, )
     # permission_classes = (IsAuthenticated, )
     serializer_class = PrescriptionSerializer
+    lookup_field = "hash_id"
 
     def get_queryset(self):
         ''' Custom Get queryset '''
@@ -64,7 +65,6 @@ class PrescriptionViewSet(viewsets.ModelViewSet):
             return Prescription.objects.filter(public_key=hex_raw_pub_key).order_by('-id')
         else:
             return Prescription.objects.all().order_by('-id')
-
 
 # add patient filter by email, after could modify with other
 router.register(r'rx-endpoint', PrescriptionViewSet, 'prescription-endpoint')

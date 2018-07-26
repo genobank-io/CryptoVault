@@ -185,9 +185,26 @@ class TransactionManager(models.Manager):
             safe_set_cache('counter', counter)
 
 
-    def check_transfer_validity(self, data, pub_key, hex_raw_pub_key):
+    def is_valid_transfer(self, data, _previous_hash, pub_key, _signature):
         ''' Method to handle transfer validity!'''
-        pass
+
+        if not Prescription.objects.check_existence(data['previous_hash']):
+             # Send a transfer with a wrong reference previous_hash
+            return (False, None)
+
+        rx = Prescription.objects.get(data['previous_hash'])
+
+        if not rx.readable:
+            # The rx is not readable
+            return (False, rx)
+
+        _msg = json.dumps(data['data'], separators=(',',':'))
+
+        if not  verify_signature(_msg, _signature, pub_key):
+            # Not valid signature
+            return (False, rx)
+
+        return (True, rx)
 
 
 

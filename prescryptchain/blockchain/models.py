@@ -185,6 +185,12 @@ class TransactionManager(models.Manager):
             safe_set_cache('counter', counter)
 
 
+    def check_transfer_validity(self, data, pub_key, hex_raw_pub_key):
+        ''' Method to handle transfer validity!'''
+        pass
+
+
+
     def create_tx(self, data, **kwargs):
         ''' Custom method for create Tx with rx item '''
 
@@ -200,6 +206,16 @@ class TransactionManager(models.Manager):
             pub_key, raw_pub_key = pubkey_base64_to_rsa(raw_pub_key)
 
         hex_raw_pub_key = savify_key(pub_key)
+
+        ''' Get previous hash '''
+        _previous_hash = data.get('previous_hash', '0')
+
+        if _previous_hash == '0':
+            # It's a initial transaction
+            pass
+        else:
+            # Its a transfer, so check validite transaction
+            self.check_transfer_validity(data, pub_key, hex_raw_pub_key)
 
         ''' FIRST Create the Transaction '''
         tx = self.create_raw_tx(data, _signature=_signature, pub_key=pub_key)
@@ -339,12 +355,18 @@ class PrescriptionQueryset(models.QuerySet):
     def has_not_block(self):
         return self.filter(block=None)
 
+    def check_existence(self, previous_hash):
+        return self.filter(hash_id=previous_hash).exists()
+
 
 class PrescriptionManager(models.Manager):
     ''' Manager for prescriptions '''
 
     def get_queryset(self):
         return PrescriptionQueryset(self.model, using=self._db)
+
+    def check_existence(self, previous_hash):
+        return self.get_queryset().check_existence(previous_hash)
 
     def has_not_block(self):
         return self.get_queryset().has_not_block()
@@ -446,7 +468,7 @@ class Prescription(models.Model):
     def raw_size(self):
         # Get the size of the raw rx
         size = (
-            len(self.raw_msg) + len(public_key) +
+            len(self.raw_msg) + len(self.public_key) +
             len(self.location) + len(self.hash_id) +
             len(self.timestamp.isoformat())
         )

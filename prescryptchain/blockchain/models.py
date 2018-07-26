@@ -215,6 +215,10 @@ class TransactionManager(models.Manager):
         _signature = data.pop("signature", None)
         # Get Public Key from API
         raw_pub_key = data.get("public_key")
+        # Initalize some data
+        _msg = json.dumps(data['data'], separators=(',',':'))
+        _is_valid_tx = False
+        _rx_before = None
 
         try:
             pub_key = pubkey_string_to_rsa(raw_pub_key) # Make it usable
@@ -227,21 +231,28 @@ class TransactionManager(models.Manager):
         ''' Get previous hash '''
         _previous_hash = data.get('previous_hash', '0')
 
+
+        ''' Check initial or transfer '''
         if _previous_hash == '0':
             # It's a initial transaction
-            pass
+            if verify_signature(_msg, _signature, pub_key):
+                _is_valid_tx = True
+
         else:
             # Its a transfer, so check validite transaction
-            self.check_transfer_validity(data, pub_key, hex_raw_pub_key)
+            _is_valid_tx, _rx_before = self.is_valid_transfer(data, _previous_hash, pub_key, _signature)
+
 
         ''' FIRST Create the Transaction '''
-        tx = self.create_raw_tx(data, _signature=_signature, pub_key=pub_key)
+        tx = self.create_raw_tx(data, _is_valid_tx=_is_valid_tx, _signature=_signature, pub_key=pub_key)
 
         ''' THEN Create the Data Item(prescription) '''
         rx = Prescription.objects.create_rx(
             data,
             _signature=_signature,
             pub_key=hex_raw_pub_key, # This is basically the address
+            _is_valid_tx=_is_valid_tx,
+            _rx_before=_rx_before,
             transaction=tx
         )
 
@@ -255,23 +266,12 @@ class TransactionManager(models.Manager):
         ''' This method just create the transaction instance '''
 
         ''' START TX creation '''
-        # This calls the super method saving all clean data first
         tx = Transaction()
         # Get Public Key from API
         pub_key = kwargs.get("pub_key", None) # Make it usable
-        _signature = kwargs.get("_signature", None)
-
-        # Save signature and timestamp
-        tx.signature = _signature
+        tx.signature = kwargs.get("_signature", None)
+        tx.is_valid = kwargs.get("_is_valid_tx", False)
         tx.timestamp = timezone.now()
-
-        # Clean data to verify signature
-        _msg = json.dumps(data['data'], separators=(',',':'))
-
-        if verify_signature(_msg, _signature, pub_key):
-            tx.is_valid = True
-        else:
-            tx.is_valid = False
 
         # Set previous hash
         if self.last() is None:
@@ -310,7 +310,6 @@ class Transaction(models.Model):
     def hash(self):
         hash_object = hashlib.sha256(self.raw_msg)
         self.txid = hash_object.hexdigest()
-
 
     @property
     def get_pub_key_receiver(self):
@@ -396,6 +395,7 @@ class PrescriptionManager(models.Manager):
             timestamp=data.get("timestamp", None),
             public_key=kwargs.get("pub_key", ""),
             signature=kwargs.get("_signature", ""),
+            is_valid=kwargs.get("_is_valid_tx", False),
             transaction=kwargs.get("transaction", None)
         )
 
@@ -406,10 +406,10 @@ class PrescriptionManager(models.Manager):
             rx.location = data["location"]
 
         # Save previous hash
-        if self.last() is None:
+        if _rx_before is None:
             rx.previous_hash = "0"
         else:
-            rx.previous_hash = self.last().hash_id
+            rx.previous_hash = _rx_before.hash_id
 
         # Generate raw msg, create hash and save it
         rx.create_raw_msg()

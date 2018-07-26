@@ -2,7 +2,7 @@
 from __future__ import unicode_literals
 
 from django.contrib import admin
-from .models import Block, Prescription, Medication, Transaction
+from .models import Block, Prescription, Transaction
 
 
 class PrescriptionAdmin(admin.ModelAdmin):
@@ -15,16 +15,12 @@ class PrescriptionAdmin(admin.ModelAdmin):
 
     search_fields = ['id']
     list_per_page = 25
-    fields = ('id','public_key', 'medic_name', 'patient_name','timestamp')
+    fields = ('id','public_key', 'timestamp')
     exclude = ('public_key','private_key',)
-    readonly_fields = ("public_key", "private_key", "medic_name",
-        "medic_cedula", "medic_hospital", "patient_name", "patient_age",
-        "diagnosis", "timestamp", "location", "details", "extras", "bought", "signature")
-    # inlines = [MedicationInline, ]
+    readonly_fields = ("public_key", "private_key", "data", "timestamp", "location","signature")
 
 
 # Register your models here.
 admin.site.register(Block)
 admin.site.register(Prescription)
-admin.site.register(Medication)
 admin.site.register(Transaction)

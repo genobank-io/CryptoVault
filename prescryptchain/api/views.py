@@ -12,23 +12,12 @@ from rest_framework import mixins, generics
 from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 # our models
-from blockchain.models import Block, Prescription, Medication, Transaction
+from blockchain.models import Block, Prescription, Transaction
 from blockchain.utils import pubkey_string_to_rsa, savify_key, pubkey_base64_to_rsa
 
 # Define router
 router = routers.DefaultRouter()
 
-
-class MedicationNestedSerializer(serializers.ModelSerializer):
-    """ Medication Nested in Prescription """
-    class Meta:
-        model = Medication
-        fields = ('id', 'presentation', 'instructions', 'drug_upc',)
-        read_only_fields = ('id',)
-        extra_kwargs = {
-            'presentation': { 'required': 'False', 'min_length': 4},
-            'instructions': { 'required': 'False', 'min_length': 4}
-        }
 
 class PrescriptionSerializer(serializers.ModelSerializer):
     """ Prescription serializer """

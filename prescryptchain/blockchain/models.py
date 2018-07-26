@@ -30,7 +30,7 @@ from .utils import (
     verify_signature, PoE, pubkey_string_to_rsa, pubkey_base64_to_rsa
 )
 from .helpers import genesis_hash_generator, GENESIS_INIT_DATA, get_genesis_merkle_root
-from api.exceptions import EmptyMedication, FailedVerifiedSignature
+from api.exceptions import FailedVerifiedSignature
 
 # Setting block size
 logger = logging.getLogger('django_info')
@@ -232,12 +232,6 @@ class TransactionManager(models.Manager):
         tx.signature = _signature
         tx.timestamp = timezone.now()
 
-        # Check later ======>>
-        # tx.sender = bin2hex(encrypt_with_public_key(data["medic_name"].encode("utf-8"), pub_key))
-        # tx.receiver = bin2hex(encrypt_with_public_key(data["medic_cedula"].encode("utf-8"), pub_key))
-        # This is basically the address
-        # tx.public_key = raw_pub_key
-
         # Clean data to verify signature
         _msg = json.dumps(data['data'], separators=(',',':'))
 
@@ -376,7 +370,7 @@ class PrescriptionManager(models.Manager):
         if self.last() is None:
             rx.previous_hash = "0"
         else:
-            rx.previous_hash = self.last().rxid
+            rx.previous_hash = self.last().hash_id
 
         # Generate raw msg, create hash and save it
         rx.create_raw_msg()
@@ -396,33 +390,23 @@ class Prescription(models.Model):
     # Cryptographically enabled fields
     public_key = models.TextField(blank=True, default="")
     ### Encrypted data payload
-    ## Patient and Medic data (encrypted data payload)
-    # Note to self, I think that this could be a JSON field with a non fixed structure
-    medic_name = models.TextField(blank=True, default="")
-    medic_cedula = models.TextField(blank=True, default="")
-    medic_hospital = models.TextField(blank=True, default="")
-    patient_name = models.TextField(blank=True, default="")
-    patient_age = models.TextField(blank=True, default="")
-    diagnosis = models.TextField(default="")
-    encrypted_data = JSONField(default={}, blank=True)
-    ## Non encrypted data payload
-    ## Public fields (non encrypted data payload)
+    data = JSONField(default={}, blank=True)
+
+    ## Public fields (non encrypted data payload) ##
     # Misc
     timestamp = models.DateTimeField(default=timezone.now, db_index=True)
     location = models.TextField(blank=True, default="")
-    raw_msg = models.TextField(blank=True, default="") # Anything can be stored here
-    location_lat = models.FloatField(null=True, blank=True, default=0) # For coordinates
+    raw_msg = models.TextField(blank=True, default="") # To sign Output
+    # For coordinates
+    location_lat = models.FloatField(null=True, blank=True, default=0)
     location_lon = models.FloatField(null=True, blank=True, default=0)
-    data = JSONField(default={}, blank=True)
-    # Rx Specific
-    details = models.TextField(blank=True, default="")
-    extras = models.TextField(blank=True, default="")
-    bought = models.BooleanField(default=False)
+
     # Transactional validation
     signature = models.TextField(null=True, blank=True, default="")
     is_valid = models.BooleanField(default=True, blank=True)
-    rxid = models.TextField(blank=True, default="")
-    previous_hash = models.TextField(default="") # this should not exist
+    hash_id = models.TextField(blank=True, default="")
+    # This is for Tx transfers
+    previous_hash = models.TextField(default="")
 
     # Business logic
     objects = PrescriptionManager()
@@ -430,19 +414,8 @@ class Prescription(models.Model):
     # Hashes msg_html with utf-8 encoding, saves this in and hash in _signature
     def hash(self):
         hash_object = hashlib.sha256(self.raw_msg)
-        self.rxid = hash_object.hexdigest()
+        self.hash_id = hash_object.hexdigest()
 
-    @cached_property
-    def get_data_base64(self):
-        # Return data of prescription on base64
-        return {
-            "medic_name" : base64.b64encode(hex2bin(self.medic_name)),
-            "medic_cedula" : base64.b64encode(hex2bin(self.medic_cedula)),
-            "medic_hospital" : base64.b64encode(hex2bin(self.medic_hospital)),
-            "patient_name" : base64.b64encode(hex2bin(self.patient_name)),
-            "patient_age" : base64.b64encode(hex2bin(self.patient_age)),
-            "diagnosis" : base64.b64encode(hex2bin(self.diagnosis))
-        }
 
     @property
     def get_pub_key(self):
@@ -471,17 +444,12 @@ class Prescription(models.Model):
 
     @cached_property
     def raw_size(self):
-        # get the size of the raw rx
+        # Get the size of the raw rx
         size = (
-            len(self.raw_msg) + len(self.diagnosis) +
-            len(self.location) + len(self.rxid) +
-            len(self.medic_name) + len(self.medic_cedula) +
-            len(self.medic_hospital) + len(self.patient_name) +
-            len(self.patient_age) + len(str(self.get_formatted_date()))
+            len(self.raw_msg) + len(public_key) +
+            len(self.location) + len(self.hash_id) +
+            len(self.timestamp.isoformat())
         )
-        if self.medications.all() is not None:
-            for med in self.medications.all():
-                size += len(med.presentation) +len(med.instructions)
         return size * 8
 
     @cached_property
@@ -491,33 +459,5 @@ class Prescription(models.Model):
 
 
     def __str__(self):
-        return self.rxid
+        return self.hash_id
 
-
-class MedicationManager(models.Manager):
-    ''' Manager to create Medication from API '''
-    def create_medication(self, prescription, **kwargs):
-        med = self.create(prescription=prescription, **kwargs)
-        med.save()
-        return med
-
-
-@python_2_unicode_compatible
-class Medication(models.Model):
-    prescription = models.ForeignKey('blockchain.Prescription',
-        related_name='medications'
-        )
-    active = models.CharField(blank=True, max_length=255, default="")
-    presentation = models.CharField(
-        blank=True, max_length=255,
-    )
-    instructions = models.TextField(blank=True, default="")
-    frequency = models.CharField(blank=True, max_length=255, default="")
-    dose = models.CharField(blank=True, max_length=255, default="")
-    bought = models.BooleanField(default=False)
-    drug_upc = models.CharField(blank=True, max_length=255, default="", db_index=True)
-
-    objects = MedicationManager()
-
-    def __str__(self):
-        return self.presentation

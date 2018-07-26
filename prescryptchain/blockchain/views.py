@@ -73,9 +73,7 @@ def rx_detail(request, hash_rx=False):
         context = {}
         try:
             rx = Prescription.objects.get(rxid=hash_rx)
-            medications = get_simplified_medication_json(rx.medications.all())
             context["rx"] = rx
-            context["medications"] = medications
             return render(request, "blockchain/rx_detail.html", context)
 
         except Exception as e:
@@ -126,12 +124,4 @@ def block_detail(request, block_hash=False):
 
     return redirect("/")
 
-def get_simplified_medication_json(medications):
-    medication_json = []
-    for medication in medications:
-        json = {}
-        json['instructions'] = medication.instructions
-        json['presentation'] = medication.presentation
-        medication_json.append(json)
-    return medication_json[::-1] # This 'pythonesque' code reverts order of lists
 

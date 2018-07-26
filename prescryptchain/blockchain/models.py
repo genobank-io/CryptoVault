@@ -27,7 +27,7 @@ from .utils import (
     un_savify_key, savify_key,
     encrypt_with_public_key, decrypt_with_private_key,
     calculate_hash, bin2hex, hex2bin,  get_new_asym_keys, get_merkle_root,
-    verify_signature, PoE, pubkey_string_to_rsa, pubkey_base64_to_rsa
+    verify_signature, PoE, pubkey_string_to_rsa, pubkey_base64_to_rsa, create_hash256
 )
 from .helpers import genesis_hash_generator, GENESIS_INIT_DATA, get_genesis_merkle_root
 from api.exceptions import FailedVerifiedSignature
@@ -391,6 +391,7 @@ class PrescriptionManager(models.Manager):
         ''' Custom Create Rx manager '''
 
         # This calls the super method saving all clean data first
+        _rx_before = kwargs.get('_rx_before', None)
         rx = Prescription(
             timestamp=data.get("timestamp", None),
             public_key=kwargs.get("pub_key", ""),
@@ -410,6 +411,8 @@ class PrescriptionManager(models.Manager):
             rx.previous_hash = "0"
         else:
             rx.previous_hash = _rx_before.hash_id
+            if rx.is_valid:
+                _rx_before.transfer_ownership()
 
         # Generate raw msg, create hash and save it
         rx.create_raw_msg()
@@ -454,6 +457,10 @@ class Prescription(models.Model):
     def hash(self):
         hash_object = hashlib.sha256(self.raw_msg)
         self.hash_id = hash_object.hexdigest()
+
+    def transfer_ownership(self):
+        ''' These method only appear when Rx is transfer succesfully'''
+        logger.info("Need to hide information with sha!")
 
 
     @property

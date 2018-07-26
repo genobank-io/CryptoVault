@@ -37,6 +37,10 @@ def calculate_hash(index, previousHash, timestamp, data):
     hash_obj = hashlib.sha256(str(index) + previousHash + str(timestamp) + data)
     return hash_obj.hexdigest()
 
+def create_hash256(data):
+    ''' Given a string return it with hash256 '''
+    hash_obj = hashlib.sha256(str(data))
+    return hash_obj.hexdigest()
 
 # Give it a hex saved string, returns a Key object ready to use
 def un_savify_key(HexPickldKey):

@@ -34,12 +34,12 @@ class PrescriptionSerializer(serializers.ModelSerializer):
             'signature',
             'previous_hash',
             'raw_size',
-            'rxid',
+            'hash_id',
             'is_valid',
             'transaction',
             'readable',
         )
-        read_only_fields = ('id', 'rxid', 'previous_hash', 'is_valid',' transaction',)
+        read_only_fields = ('id', 'hash_id', 'previous_hash', 'is_valid',' transaction',)
 
     def create(self, validated_data):
         return Transaction.objects.create_tx(data=validated_data)

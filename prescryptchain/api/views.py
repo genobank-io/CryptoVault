@@ -23,6 +23,7 @@ class PrescriptionSerializer(serializers.ModelSerializer):
     """ Prescription serializer """
     timestamp = serializers.DateTimeField(read_only=False)
     data = serializers.JSONField(binary=False, read_only=False)
+    previous_hash = serializers.CharField(read_only=False, required=False, default="0")
 
     class Meta:
         model = Prescription
@@ -39,7 +40,14 @@ class PrescriptionSerializer(serializers.ModelSerializer):
             'transaction',
             'readable',
         )
-        read_only_fields = ('id', 'hash_id', 'previous_hash', 'is_valid',' transaction',)
+        read_only_fields = ('id', 'hash_id', 'is_valid',' transaction',)
+
+    def validate(self, data):
+        ''' Method to control Extra Keys on Payload!'''
+        extra_keys = set(self.initial_data.keys()) - set(self.fields.keys())
+        if extra_keys:
+            print(extra_keys)
+        return data
 
     def create(self, validated_data):
         return Transaction.objects.create_tx(data=validated_data)

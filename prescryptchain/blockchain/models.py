@@ -185,14 +185,13 @@ class TransactionManager(models.Manager):
             safe_set_cache('counter', counter)
 
 
-    def is_valid_transfer(self, data, _previous_hash, pub_key, _signature):
+    def is_transfer_valid(self, data, _previous_hash, pub_key, _signature):
         ''' Method to handle transfer validity!'''
-
         if not Prescription.objects.check_existence(data['previous_hash']):
              # Send a transfer with a wrong reference previous_hash
             return (False, None)
 
-        rx = Prescription.objects.get(data['previous_hash'])
+        rx = Prescription.objects.get(hash_id=data['previous_hash'])
 
         if not rx.readable:
             # The rx is not readable
@@ -200,7 +199,7 @@ class TransactionManager(models.Manager):
 
         _msg = json.dumps(data['data'], separators=(',',':'))
 
-        if not  verify_signature(_msg, _signature, pub_key):
+        if not  verify_signature(_msg, _signature, un_savify_key(rx.public_key)):
             # Not valid signature
             return (False, rx)
 
@@ -230,7 +229,7 @@ class TransactionManager(models.Manager):
 
         ''' Get previous hash '''
         _previous_hash = data.get('previous_hash', '0')
-
+        logger.info("previous_hash: {}".format(_previous_hash))
 
         ''' Check initial or transfer '''
         if _previous_hash == '0':
@@ -240,7 +239,7 @@ class TransactionManager(models.Manager):
 
         else:
             # Its a transfer, so check validite transaction
-            _is_valid_tx, _rx_before = self.is_valid_transfer(data, _previous_hash, pub_key, _signature)
+            _is_valid_tx, _rx_before = self.is_transfer_valid(data, _previous_hash, pub_key, _signature)
 
 
         ''' FIRST Create the Transaction '''

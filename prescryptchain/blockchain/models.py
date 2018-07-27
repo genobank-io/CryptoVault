@@ -469,10 +469,19 @@ class Prescription(models.Model):
     def transfer_ownership(self):
         ''' These method only appear when Rx is transfer succesfully'''
         self.readable = False
-        logger.info("TODO hide information with sha methods!")
+        self.destroy_data()
         self.save()
+        logger.info("[TRANSFER_OWNERSHIP]Success destroy data!")
 
 
+    def destroy_data(self):
+        ''' Destroy data if transfer ownership (Adjust Logic if model change) '''
+        _data = self.data
+
+        for _dict in _data:
+            _dict.update((key, hashlib.sha256(value).hexdigest()) for key, value in _dict.iteritems())
+
+        self.data = _data
 
     @property
     def get_pub_key(self):

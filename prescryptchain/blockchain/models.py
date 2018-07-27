@@ -408,9 +408,13 @@ class PrescriptionManager(models.Manager):
         # Save previous hash
         if _rx_before is None:
             rx.previous_hash = "0"
+            rx.readable = True
         else:
             rx.previous_hash = _rx_before.hash_id
+
             if rx.is_valid:
+                _rx_before.readable = False
+                rx.readable = True
                 _rx_before.transfer_ownership()
 
         # Generate raw msg, create hash and save it

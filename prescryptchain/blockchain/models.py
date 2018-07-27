@@ -188,21 +188,22 @@ class TransactionManager(models.Manager):
     def is_transfer_valid(self, data, _previous_hash, pub_key, _signature):
         ''' Method to handle transfer validity!'''
         if not Prescription.objects.check_existence(data['previous_hash']):
-             # Send a transfer with a wrong reference previous_hash
+            logger.info("[IS_TRANSFER_VALID] Send a transfer with a wrong reference previous_hash!")
             return (False, None)
 
         rx = Prescription.objects.get(hash_id=data['previous_hash'])
 
         if not rx.readable:
-            # The rx is not readable
+            logger.info("[IS_TRANSFER_VALID]The rx is not readable")
             return (False, rx)
 
         _msg = json.dumps(data['data'], separators=(',',':'))
 
         if not  verify_signature(_msg, _signature, un_savify_key(rx.public_key)):
-            # Not valid signature
+            logger.info("[IS_TRANSFER_VALID]Signature is not valid!")
             return (False, rx)
 
+        logger.info("[IS_TRANSFER_VALID] Success")
         return (True, rx)
 
 
@@ -235,6 +236,7 @@ class TransactionManager(models.Manager):
         if _previous_hash == '0':
             # It's a initial transaction
             if verify_signature(_msg, _signature, pub_key):
+                logger.info("[CREATE_TX] Tx valid!")
                 _is_valid_tx = True
 
         else:
@@ -407,15 +409,18 @@ class PrescriptionManager(models.Manager):
 
         # Save previous hash
         if _rx_before is None:
+            logger.info("[CREATE_RX] New transaction!")
             rx.previous_hash = "0"
             rx.readable = True
         else:
+            logger.info("[CREATE_RX] New transaction transfer!")
             rx.previous_hash = _rx_before.hash_id
-
             if rx.is_valid:
-                _rx_before.readable = False
+                logger.info("[CREATE_RX] Tx transfer is valid!")
                 rx.readable = True
                 _rx_before.transfer_ownership()
+            else:
+                logger.info("[CREATE_RX] Tx transfer not valid!")
 
         # Generate raw msg, create hash and save it
         rx.create_raw_msg()
@@ -463,7 +468,10 @@ class Prescription(models.Model):
 
     def transfer_ownership(self):
         ''' These method only appear when Rx is transfer succesfully'''
-        logger.info("Need to hide information with sha!")
+        self.readable = False
+        logger.info("TODO hide information with sha methods!")
+        self.save()
+
 
 
     @property

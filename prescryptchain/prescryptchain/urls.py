@@ -17,6 +17,7 @@ from django.contrib.staticfiles.urls import static
 from rest_framework.documentation import include_docs_urls
 
 # Our Models
+from core.views import TxStatistics
 from .views import home, humanstxt
 from blockchain.views import (
     AddPrescriptionView, rx_detail, block_detail,
@@ -40,7 +41,10 @@ urlpatterns = [
     url(r'^validate/(?P<hash_rx>\w+)/$', ValidateRxView.as_view(), name="validate"),
     # Static content
     url(r'^proof-of-existence/$', poe, name="proof-of-existence"),
-    url(r'^humans.txt/$', humanstxt, name="humanstxt")
+    url(r'^humans.txt/$', humanstxt, name="humanstxt"),
+    # TxStatics
+    url(r'^tx-statistics/$', TxStatistics.as_view(), name="tx-statistics"),
+
 ]
 
 # Show images stored local in dev

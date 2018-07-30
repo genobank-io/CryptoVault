@@ -25,11 +25,11 @@
               {% for country in rx.data %}
                 <tr>
                   <td class="a_grey">Country Name {{ forloop.counter }}:</td>
-                  <td class="a_grey" id="medication">{{ country.country_name }}</td>
+                  <td class="a_grey country_name">{{ country.country_name }}</td>
                 </tr>
                 <tr>
                   <td class="a_grey">Percentage {{ forloop.counter }}:</td>
-                  <td class="a_grey" id="instrucciones">{{ country.percentage }}</td>
+                  <td class="a_grey percentage">{{ country.percentage }}</td>
                 </tr>
               {% endfor %}
               </section>
@@ -48,7 +48,7 @@
               </tr>
               <tr>
                   <td class="a_grey">Previous Hash:</td>
-                  <td><a class="a_grey" href="/hash/{{ rx.get_before_hash }}">{{ rx.get_before_hash }}</a></td>
+                  <td><a class="a_grey" href="/hash/{{ rx.get_previous_hash }}">{{ rx.get_previous_hash }}</a></td>
               </tr>
             </table>
           </article>
@@ -88,7 +88,6 @@
   <script src="{% static "js/html5-qrcode.min.js" %}"></script>
   <script src="{% static "js/jsqrcode-combined.min.js" %}"></script>
   <script>
-
     $("#qr-box").toggleClass("hidden");
     $('#reader').html5_qrcode(function(data){
         // do something when code is read
@@ -100,23 +99,18 @@
 
       }, function(error){
         //show read errors
-        // Uncomment this to debug
         console.log(error);
 
       }, function(videoError){
         //the video stream could be opened
-        // Uncomment this to debug
         console.log(error);
       }
     );
     //DECRYPT FUNCTION BUTTON
     $("#decrypt-button").click(function() {
-      decryptBase("#medic_name");
-      decryptBase("#medic_cedula");
-      decryptBase("#medic_hospital");
-      decryptBase("#patient_name");
-      decryptBase("#patient_age");
-      decryptBase("#diagnosis");
+      {# TODO Make this functional! #}
+      // ie. decryptBase("#medic_name");
+
     });
     function decryptBase(baseTextID){
       var encrypted = $(baseTextID).html();

@@ -12,32 +12,18 @@ from rest_framework import mixins, generics
 from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 # our models
-from blockchain.models import Block, Prescription, Medication
+from blockchain.models import Block, Prescription, Transaction
 from blockchain.utils import pubkey_string_to_rsa, savify_key, pubkey_base64_to_rsa
 
 # Define router
 router = routers.DefaultRouter()
 
 
-class MedicationNestedSerializer(serializers.ModelSerializer):
-    """ Medication Nested in Prescription """
-    class Meta:
-        model = Medication
-        fields = ('id', 'presentation', 'instructions', 'drug_upc',)
-        read_only_fields = ('id',)
-        extra_kwargs = {
-            'presentation': { 'required': 'False', 'min_length': 4},
-            'instructions': { 'required': 'False', 'min_length': 4}
-        }
-
 class PrescriptionSerializer(serializers.ModelSerializer):
     """ Prescription serializer """
-    medications = MedicationNestedSerializer(
-        many=True, required=False,
-        help_text = "Medication Nested Serializer"
-    )
     timestamp = serializers.DateTimeField(read_only=False)
     data = serializers.JSONField(binary=False, read_only=False)
+    previous_hash = serializers.CharField(read_only=False, required=False, default="0")
 
     class Meta:
         model = Prescription
@@ -45,21 +31,26 @@ class PrescriptionSerializer(serializers.ModelSerializer):
             'id',
             'public_key',
             'data',
-            'medications',
             'timestamp',
             'signature',
             'previous_hash',
             'raw_size',
-            'rxid',
+            'hash_id',
             'is_valid',
-            'block',
+            'transaction',
+            'readable',
         )
-        read_only_fields = ('id', 'rxid', 'previous_hash', 'is_valid', 'block')
+        read_only_fields = ('id', 'hash_id', 'is_valid',' transaction',)
+
+    def validate(self, data):
+        ''' Method to control Extra Keys on Payload!'''
+        extra_keys = set(self.initial_data.keys()) - set(self.fields.keys())
+        if extra_keys:
+            print(extra_keys)
+        return data
 
     def create(self, validated_data):
-        print(validated_data) # Debug only
-        rx = Prescription.objects.create_rx(data=validated_data)
-        return rx
+        return Transaction.objects.create_tx(data=validated_data)
 
 
 class PrescriptionViewSet(viewsets.ModelViewSet):
@@ -68,6 +59,7 @@ class PrescriptionViewSet(viewsets.ModelViewSet):
     # authentication_classes = (TokenAuthentication, BasicAuthentication, )
     # permission_classes = (IsAuthenticated, )
     serializer_class = PrescriptionSerializer
+    lookup_field = "hash_id"
 
     def get_queryset(self):
         ''' Custom Get queryset '''
@@ -79,8 +71,8 @@ class PrescriptionViewSet(viewsets.ModelViewSet):
                 pub_key , raw_public_key = pubkey_base64_to_rsa(raw_public_key)
             hex_raw_pub_key = savify_key(pub_key)
             return Prescription.objects.filter(public_key=hex_raw_pub_key).order_by('-id')
-        return Prescription.objects.all().order_by('-id')
-
+        else:
+            return Prescription.objects.all().order_by('-id')
 
 # add patient filter by email, after could modify with other
 router.register(r'rx-endpoint', PrescriptionViewSet, 'prescription-endpoint')

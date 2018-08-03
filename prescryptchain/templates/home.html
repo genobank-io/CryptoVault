@@ -12,7 +12,7 @@
         <div class="row">
           <div class="col-md-3"><img src="{% static 'media/icon_transfer.svg' %}" alt=""></div>
           <div class="col-md-9">
-            <p id="dtransferred">39,122</p>
+            <p id="dtransferred">00000</p>
             <p>Total data transferred</p>
           </div>
         </div>
@@ -22,7 +22,7 @@
         <div class="row">
           <div class="col-md-3"><img src="{% static 'media/icon_day.svg' %}" alt=""></div>
           <div class="col-md-9">
-            <p id="transday">270</p>
+            <p id="transday">000</p>
             <p>Transaction per day</p>
           </div>
         </div>
@@ -32,7 +32,7 @@
         <div class="row">
           <div class="col-md-3"><img src="{% static 'media/icon_month.svg' %}" alt=""></div>
           <div class="col-md-9">
-            <p id="transmonth">8123</p>
+            <p id="transmonth">0000</p>
             <p>Transaction per month</p>
           </div>
         </div>
@@ -144,13 +144,13 @@
 
 {% block jsblock %}
 <script>
-  var TRANSFERRED = "39,122";
-  var TRANSDAY = "270";
-  var TRANSMONTH = "8123";
+  var transferredData = "39,122";
+  var transactionByDay = "270";
+  var transactionByMonth = "8123";
 
-  document.getElementById("#dtransferred").innerHTML = TRANSFERRED;
-  document.getElementById("#transday").innerHTML = TRANSDAY;
-  document.getElementById("#transmonth").innerHTML = TRANSMONTH;
+  document.getElementById("dtransferred").innerHTML = transferredData;
+  document.getElementById("transday").innerHTML = transactionByDay;
+  document.getElementById("transmonth").innerHTML = transactionByMonth;
 </script>
     <!-- amCharts javascript sources -->
     <script type="text/javascript" src="https://www.amcharts.com/lib/3/amcharts.js"></script>

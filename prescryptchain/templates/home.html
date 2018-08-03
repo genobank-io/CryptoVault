@@ -144,9 +144,9 @@
 
 {% block jsblock %}
 <script>
-  var transferredData = "39,122";
-  var transactionByDay = "270";
-  var transactionByMonth = "8123";
+  var transferredData = "{‌{ total_data_transfered }‌}";
+  var transactionByDay = "{‌{ total_txs_by_day }‌}";
+  var transactionByMonth = "{‌{ total_txs_by_month }‌}";
 
   document.getElementById("dtransferred").innerHTML = transferredData;
   document.getElementById("transday").innerHTML = transactionByDay;

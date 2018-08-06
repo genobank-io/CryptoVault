@@ -1,7 +1,6 @@
 # -*- encoding: utf-8 -*-
 # AESCipher
 # from core.utils import AESCipher
-import binascii
 ## Hash lib
 import hashlib
 import logging
@@ -38,6 +37,10 @@ def calculate_hash(index, previousHash, timestamp, data):
     hash_obj = hashlib.sha256(str(index) + previousHash + str(timestamp) + data)
     return hash_obj.hexdigest()
 
+def create_hash256(data):
+    ''' Given a string return it with hash256 '''
+    hash_obj = hashlib.sha256(str(data))
+    return hash_obj.hexdigest()
 
 # Give it a hex saved string, returns a Key object ready to use
 def un_savify_key(HexPickldKey):
@@ -86,7 +89,7 @@ def verify_signature(message, signature, PublicKey):
         signature = binascii.unhexlify(signature)
         return rsa.verify(message, signature, PublicKey)
     except Exception as e:
-        print("[CryptoTool, verify ERROR ] Signature or message are corrupted")
+        print("[CryptoTool, verify ERROR ] Signature or message are corrupted: Error: {}, type: {}".format(e, type(e)))
         return False
 
 # Merkle root - gets a list of prescriptions and returns a merkle root
@@ -96,7 +99,7 @@ def get_merkle_root(prescriptions):
     mt = merkletools.MerkleTools() # Default is SHA256
     # Build merkle tree with Rxs
     for rx in prescriptions:
-        mt.add_leaf(rx.rxid)
+        mt.add_leaf(rx.hash_id)
     mt.make_tree();
     # Just to check
     logger.error("Leaf Count: {}".format(mt.get_leaf_count()))
@@ -112,13 +115,13 @@ def is_rx_in_block(target_rx, block):
     n = 0
     for index, hash in enumerate(rx_hashes):
         mtn.add_leaf(hash)
-        if target_rx.rxid == hash:
+        if target_rx.hash_id == hash:
             n = index
     # Make the tree and get the proof
     mtn.make_tree()
     proof = mtn.get_proof(n)
     logger.error("Proof: {}".format(proof))
-    return mtn.validate_proof(proof, target_rx.rxid, block.merkleroot)
+    return mtn.validate_proof(proof, target_rx.hash_id, block.merkleroot)
 
 
 def get_qr_code(data, file_path="/tmp/qrcode.jpg"):
@@ -158,7 +161,6 @@ class PoE(object):
         except Exception as e:
             print("[PoE ERROR] Error returning transantion details :%s, type(%s)" % (e, type(e)))
             raise e
-
 
 def privkey_string_to_rsa(string_key):
     '''Take a private key created with jsencrypt and convert it into

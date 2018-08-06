@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
+from django.utils import timezone
 from django.http import JsonResponse
 from django.views.generic import View
-from blockchain.models import Prescription # TODO modify for Transactions after merge!
-from django.utils import timezone
+from blockchain.models import Prescription
 
 
 class TxStatistics(View):

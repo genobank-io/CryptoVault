@@ -375,6 +375,15 @@ class PrescriptionQueryset(models.QuerySet):
     def check_existence(self, previous_hash):
         return self.filter(hash_id=previous_hash).exists()
 
+    def total_medics(self):
+        return self.distinct("public_key")
+
+    def rx_by_today(self):
+        return self.filter(timestamp__date=timezone.now().date())
+
+    def rx_by_month(self):
+        return self.filter(timestamp__month=timezone.now().date().month)
+
 
 class PrescriptionManager(models.Manager):
     ''' Manager for prescriptions '''
@@ -387,6 +396,15 @@ class PrescriptionManager(models.Manager):
 
     def has_not_block(self):
         return self.get_queryset().has_not_block()
+
+    def total_medics(self):
+        return self.get_queryset().total_medics()
+
+    def rx_by_today(self):
+        return self.get_queryset().rx_by_today()
+
+    def rx_by_month(self):
+        return self.get_queryset().rx_by_month()
 
     def create_rx(self, data, **kwargs):
         ''' Custom Create Rx manager '''

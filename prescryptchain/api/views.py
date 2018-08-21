@@ -22,7 +22,8 @@ router = routers.DefaultRouter()
 class PrescriptionSerializer(serializers.ModelSerializer):
     """ Prescription serializer """
     timestamp = serializers.DateTimeField(read_only=False)
-    data = serializers.JSONField(binary=False, read_only=False)
+    data = serializers.JSONField(binary=False, read_only=False, required=False)
+    files = serializers.JSONField(binary=False, read_only=False, required=False)
     previous_hash = serializers.CharField(read_only=False, required=False, default="0")
 
     class Meta:
@@ -31,6 +32,7 @@ class PrescriptionSerializer(serializers.ModelSerializer):
             'id',
             'public_key',
             'data',
+            "files",
             'timestamp',
             'signature',
             'previous_hash',

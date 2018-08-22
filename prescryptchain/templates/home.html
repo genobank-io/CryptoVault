@@ -188,11 +188,12 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     },
     title: {
-      text: 'Genomics / s'
+      text: 'Historial'
     },
     xAxis: {
       type: 'datetime',
-      tickPixelInterval: 150
+      tickPixelInterval: 150,
+      hour: '%H:%M'
     },
     yAxis: {
       title: {
@@ -206,7 +207,7 @@ document.addEventListener('DOMContentLoaded', function() {
     },
     tooltip: {
       formatter: function () {
-        return Highcharts.dateFormat('%Y-%m-%d %H:%M:%S', this.x) + '<br/>' +
+        return Highcharts.dateFormat('%H:%M', this.x) + '<br/>' +
           Highcharts.numberFormat(this.y, 2);
       }
     },
@@ -217,7 +218,7 @@ document.addEventListener('DOMContentLoaded', function() {
       enabled: false
     },
     series: [{
-      name: 'Genomics/s',
+      name: 'Historial',
       data: []
     }]
   });

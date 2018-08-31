@@ -198,6 +198,7 @@ class TransactionManager(models.Manager):
             return (False, rx)
 
         _msg = json.dumps(data['data'], separators=(',',':'))
+        # TODO add verify files data too
 
         if not  verify_signature(_msg, _signature, un_savify_key(rx.public_key)):
             logger.info("[IS_TRANSFER_VALID]Signature is not valid!")
@@ -254,7 +255,7 @@ class TransactionManager(models.Manager):
             pub_key=hex_raw_pub_key, # This is basically the address
             _is_valid_tx=_is_valid_tx,
             _rx_before=_rx_before,
-            transaction=tx
+            transaction=tx,
         )
 
         ''' LAST do create block attempt '''
@@ -404,6 +405,9 @@ class PrescriptionManager(models.Manager):
         if "data" in data:
             rx.data = data["data"]
 
+        if "files" in data:
+            rx.files = data["files"]
+
         if "location" in data:
             rx.location = data["location"]
 
@@ -441,6 +445,7 @@ class Prescription(models.Model):
     public_key = models.TextField(blank=True, default="")
     ### Encrypted data payload
     data = JSONField(default={}, blank=True)
+    files = JSONField(default={}, blank=True)
 
     ## Public fields (non encrypted data payload) ##
     # Misc

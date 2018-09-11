@@ -482,11 +482,21 @@ class Prescription(models.Model):
     def destroy_data(self):
         ''' Destroy data if transfer ownership (Adjust Logic if model change) '''
         _data = self.data
+        _files = self.files
 
-        for _dict in _data:
-            _dict.update((key, hashlib.sha256(value).hexdigest()) for key, value in _dict.iteritems())
+        #hashing Data
+        if _data:
+            for _dict in _data:
+                _dict.update((key, hashlib.sha256(value).hexdigest()) for key, value in _dict.iteritems())
 
-        self.data = _data
+            self.data = _data
+
+        #hashing Files
+        if _files:
+            _files = [hashlib.sha256(value).hexdigest() for value in _files]
+
+            self.files = _files
+
 
     @property
     def get_pub_key(self):

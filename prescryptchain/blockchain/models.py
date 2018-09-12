@@ -29,6 +29,8 @@ from .utils import (
     calculate_hash, bin2hex, hex2bin,  get_new_asym_keys, get_merkle_root,
     verify_signature, PoE, pubkey_string_to_rsa, pubkey_base64_to_rsa, create_hash256
 )
+from core.behaviors import Timestampable
+from .managers import AddressManager
 from .helpers import genesis_hash_generator, GENESIS_INIT_DATA, get_genesis_merkle_root
 from api.exceptions import FailedVerifiedSignature
 
@@ -541,4 +543,30 @@ class Prescription(models.Model):
 
     def __str__(self):
         return self.hash_id
+
+
+class Address(Timestampable, models.Model):
+    ''' Table of addresses '''
+
+    public_key_b64 = models.TextField("Public Key", default="", help_text='Format: Base 64', unique=True)
+    address =  models.CharField("Address to get transactions", max_length=255, default="", help_text='Format: Base 58 and valid bitcoin address')
+    is_valid = models.BooleanField("Check if address is valid", blank=True, default=True)
+
+    objects = AddressManager()
+
+    class Meta:
+        ''' Custom Admin metadata'''
+        verbose_name_plural = "Valid Bitcoin Addresses"
+        ordering = ['created_at']
+
+    def __str__(self):
+        return self.address
+
+    @property
+    def get_pub_key(self):
+        ''' GET Pub Key in PEM format '''
+        import code; code.interact(local=locals())
+        pub_key , raw_public_key = pubkey_base64_to_rsa(self.public_key_b64)
+        return raw_public_key
+
 

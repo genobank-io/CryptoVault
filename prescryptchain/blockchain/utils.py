@@ -189,6 +189,11 @@ def pubkey_string_to_rsa(string_key):
     return pubkey
 
 
+def pubkey_base64_from_uri(base64_key):
+    ''' Get pub_key from base64 uri '''
+    return base64_key.replace(" ", "+")
+
+
 def pubkey_base64_to_rsa(base64_key):
     ''' Convert base64 pub key to pem file and then pub key rsa object '''
 

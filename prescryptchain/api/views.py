@@ -130,7 +130,7 @@ class AddressSerializer(serializers.ModelSerializer):
 class AddressViewSet(viewsets.ModelViewSet):
     """ Prescription Viewset """
     serializer_class = AddressSerializer
-    lookup_field = "public_key_b64"
+    lookup_field = "address"
     http_method_names = ['get', 'options']
 
     def get_queryset(self):
@@ -147,7 +147,7 @@ class AddressViewSet(viewsets.ModelViewSet):
                 return Address.objects.filter(address=_address)
 
         else:
-            raise NonValidPubKey
+            return Address.objects.all()
 
 
 # add patient filter by email, after could modify with other

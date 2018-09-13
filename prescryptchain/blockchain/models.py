@@ -565,7 +565,6 @@ class Address(Timestampable, models.Model):
     @property
     def get_pub_key(self):
         ''' GET Pub Key in PEM format '''
-        import code; code.interact(local=locals())
         pub_key , raw_public_key = pubkey_base64_to_rsa(self.public_key_b64)
         return raw_public_key
 

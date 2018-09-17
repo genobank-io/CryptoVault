@@ -22,6 +22,7 @@ from django.core.cache import cache
 
 # Our methods
 from core.helpers import safe_set_cache
+from .helpers import ordered_data
 from core.utils import Hashcash
 from .utils import (
     un_savify_key, savify_key,
@@ -219,7 +220,8 @@ class TransactionManager(models.Manager):
         # Get Public Key from API
         raw_pub_key = data.get("public_key")
         # Initalize some data
-        _msg = json.dumps(data['data'], separators=(',',':'))
+        _msg = ordered_data(data['data'])
+        _msg = json.dumps(_msg, separators=(',',':'))
         _is_valid_tx = False
         _rx_before = None
 

@@ -215,6 +215,7 @@ class TransactionManager(models.Manager):
         ''' Custom method for create Tx with rx item '''
 
         ''' Get initial data '''
+        logger.info("[CREATE TX INFO] cleaned_data: {}".format(data))
         _signature = data.pop("signature", None)
         # Get Public Key from API
         raw_pub_key = data.get("public_key")

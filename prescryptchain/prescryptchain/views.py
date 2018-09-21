@@ -3,8 +3,9 @@ from __future__ import unicode_literals
 
 import logging
 from django.shortcuts import render
+from django.utils import timezone
 
-from blockchain.models import Prescription, Block
+from blockchain.models import Prescription, Block, Transaction
 
 
 def home(request):
@@ -12,10 +13,17 @@ def home(request):
     logger = logging.getLogger('django_info')
     LIMIT_SEARCH = 10
     LIMIT_BLOCK = 5
-    rxs = Prescription.objects.all().order_by('-id')[:LIMIT_SEARCH]
-    blocks = Block.objects.all().order_by('-id')[:LIMIT_BLOCK]
-    logger.info('Total Blocks: {}'.format(blocks.count()))
-    return render(request, "home.html", {"prescriptions" : rxs, "rx_blocks": blocks })
+    _now = timezone.now()
+
+    context = {
+        "prescriptions" : Prescription.objects.all().order_by('-id')[:LIMIT_SEARCH],
+        "rx_blocks": Block.objects.all().order_by('-id')[:LIMIT_BLOCK],
+        "TOTAL_GENOMIC_DATA": Prescription.objects.all().count(),
+        "TX_BY_YEAR": Transaction.objects.tx_by_year(_now).count(),
+        "TX_BY_MONTH": Transaction.objects.tx_by_month(_now).count(),
+    }
+
+    return render(request, "home.html", context)
 
 
 def block_detail(request, block_hash):

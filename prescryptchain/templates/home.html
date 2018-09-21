@@ -152,6 +152,20 @@
 
   <!--Real time charts Javascript Code-->
   <script>
+    /*****
+      BEGIN VARIABLES
+    *****/
+
+    // TODO Ilham  aquí te agrego las variables! Porfa cambia lo correspondiente
+    var TOTAL_GENOMIC_DATA = "{{ TOTAL_GENOMIC_DATA }}";
+    var TX_BY_MONTH = "{{ TX_BY_MONTH }}";
+    var TX_BY_YEAR = "{{ TX_BY_YEAR }}";
+
+    /*****
+      END VARIABLES
+    *****/
+
+
     var chart; // global
     var HOSTNAME = window.location.protocol+'//'+window.location.hostname+(window.location.port ? ':'+window.location.port: '');
     var TX_STATISTICS_ENDPOINT = HOSTNAME + "/tx-statistics/";

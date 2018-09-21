@@ -155,6 +155,14 @@ class TransactionQueryset(models.QuerySet):
     def has_not_block(self):
         return self.filter(block=None)
 
+    def tx_by_month(self, date_filter):
+        _date = date_filter.date()
+        return self.filter(timestamp__year=_date.year).filter(timestamp__month=_date.month)
+
+    def tx_by_year(self, date_filter):
+        _date = date_filter.date()
+        return self.filter(timestamp__year=_date.year)
+
 
 class TransactionManager(models.Manager):
     ''' Manager for prescriptions '''
@@ -164,6 +172,13 @@ class TransactionManager(models.Manager):
 
     def has_not_block(self):
         return self.get_queryset().has_not_block()
+
+    def tx_by_month(self, date_filter):
+        return self.get_queryset().tx_by_month(date_filter)
+
+    def tx_by_year(self, date_filter):
+        return self.get_queryset().tx_by_year(date_filter)
+
 
     def create_block_attempt(self): # This is where PoW happens
         ''' Use PoW hashcash algoritm to attempt to create a block '''

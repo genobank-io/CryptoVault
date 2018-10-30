@@ -1,11 +1,11 @@
 
 # CrytoVault - Genobank.io 
 
-## The first decentralized Genomic BioCloud infrastructure that aims to become the best platform to store, process and share DNA, RNA, Microbiome, and healthcare datasets for humans, animals, and plants. We create worldwide connections between bioinformaticians, genetic counselors \& labs to support analyzing, sharing, donating, and selling digital Biobank data. 
+The first decentralized Genomic BioCloud infrastructure that aims to become the best platform to store, process and share DNA, RNA, Microbiome, and healthcare datasets for humans, animals, and plants. We create worldwide connections between bioinformaticians, genetic counselors \& labs to support analyzing, sharing, donating, and selling digital Biobank data. 
 
-## Our members can easily connect with anyone in the Genobank network with the highest level of privacy. The SQN Protocol is an open proprietary protocol that can power other future Genomic decentralized applications.
+Our members can easily connect with anyone in the Genobank network with the highest level of privacy. The SQN Protocol is an open proprietary protocol that can power other future Genomic decentralized applications.
 
-## These protocols provide the Genobank.io network with three essential systems: 
+These protocols provide the Genobank.io network with three essential systems: 
  1. A decentralized database of genomic datasets, 
  2. A consent system based on access to data using public key cryptography 
  3. A canonical data set object that can be traded, referenced, and linked

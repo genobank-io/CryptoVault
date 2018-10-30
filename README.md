@@ -1,8 +1,20 @@
 
-# CrytoVault - a Python - SQL based lightweight, cryptographically enabled, centralised blockchain implementation – Originally forked from NaiveChain and ported into Python, but no original code remains.
+# CrytoVault - Genobank.io 
+
+The first decentralized Genomic BioCloud infrastructure that aims to become the best platform to store, process and share DNA, RNA, Microbiome, and healthcare datasets for humans, animals, and plants. We create worldwide connections between bioinformaticians, genetic counselors \& labs to support analyzing, sharing, donating, and selling digital Biobank data. 
+
+Our members can easily connect with anyone in the Genobank network with the highest level of privacy. The SQN Protocol is an open proprietary protocol that can power other future Genomic decentralized applications.
+
+These protocols provide the Genobank.io network with three essential systems: 
+ 1. A decentralized database of genomic datasets, 
+ 2. A consent system based on access to data using public key cryptography 
+ 3. A canonical data set object that can be traded, referenced, and linked
+
+## About CryptoVault
+This is a Python - SQL based lightweight, cryptographically enabled, centralised blockchain implementation – Originally forked from RxChain, but heavily modified with a data layer.
 
 ### Motivation
-All the current implementations of blockchains are tightly coupled with the larger context and problems they (e.g. Bitcoin or Ethereum) are trying to solve. This leaves little room to implement different solutions. Especially source-code-wisely. This project is an attempt to provide a lightweight concise and simple implementation of a blockchain as possible, completely designed around electronic medical prescriptions.
+All the current implementations of blockchains are tightly coupled with the larger context and problems they (e.g. Bitcoin or Ethereum) are trying to solve. This leaves little room to implement different solutions. Especially source-code-wisely. This project is an attempt to provide a lightweight concise and simple implementation of a blockchain as possible, completely designed around saved and transfer of DNA data.
 
 
 ### What is blockchain
@@ -10,13 +22,14 @@ All the current implementations of blockchains are tightly coupled with the larg
 
 
 ### Key concepts of CrytoVault
- *CrytoVault* is focused on the specifics of cryptography (which can be linked to electronic identities) and immutability, achieved by Blocks that couple prescription's merkle trees and can verify integrity easily.
+ *CrytoVault* is focused on the specifics of cryptography (which can be linked to electronic identities) and immutability, achieved by Blocks that couple DNA transactions's merkle trees and can verify integrity easily.
 * HTTP interface to control the node
 * At the moment it is a centralised chain of blocks, the block's merkle root can be anchored with Proof of Existence to any particular distributed Blockchain (in a similar way to Factom's white paper) (https://github.com/FactomProject/FactomDocs/blob/master/whitepaper.md)
 * At the moment data is persisted in an SQL implementation
 * Access to the database is enabled by Asymetric Cryptography
-* Proof-of-work or proof-of-stake: This is the next step, a proof of work is a useful way to stop fake data from being created
-* After proof of work has been developed, a distributed version can be built
+* Proof-of-work thourght Hashcash (http://www.hashcash.org/hashcash.pdf) for to stop fake data from being created.
+* Transactions: You can transfer DNA data through Genobank.io Wallet (https://github.com/genobank-io/wallet). 
+* Distributed version: This is step follow.
 
 ### Quick start
 (set up node and mine 1 block)

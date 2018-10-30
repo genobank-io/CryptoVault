@@ -10,6 +10,9 @@ These protocols provide the Genobank.io network with three essential systems:
  2. A consent system based on access to data using public key cryptography 
  3. A canonical data set object that can be traded, referenced, and linked
 
+## About CryptoVault
+This is a Python - SQL based lightweight, cryptographically enabled, centralised blockchain implementation – Originally forked from RxChain, but heavily modified with a data layer.
+
 ### Motivation
 All the current implementations of blockchains are tightly coupled with the larger context and problems they (e.g. Bitcoin or Ethereum) are trying to solve. This leaves little room to implement different solutions. Especially source-code-wisely. This project is an attempt to provide a lightweight concise and simple implementation of a blockchain as possible, completely designed around saved and transfer of DNA data.
 
@@ -56,5 +59,3 @@ curl http://127.0.0.1:8000/api/v1/block
 ```
 GO to  http://127.0.0.1:8000/
 ```
-
-### Python base 2.3.*
